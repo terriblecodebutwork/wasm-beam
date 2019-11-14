@@ -1,4 +1,14 @@
-Readme text goes here
+Wasm deocder and interpreter
 
+(In progress)
 
-From template
+example:
+
+```iex
+# decode a .wasm file
+
+file = File.read!("priv/program/out/main.wasm")
+module =
+  Decoder.parse_module(file)
+  |> IO.inspect()
+```

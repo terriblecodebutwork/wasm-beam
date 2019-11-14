@@ -4,36 +4,36 @@ defmodule Machine do
 
 
   @const [
-    {"i32.const", &(&1)},
-    {"i64.const", &(&1)},
-    {"f32.const", &(&1)},
-    {"f64.const", &(&1)}
+    {:i32_const, &(&1)},
+    {:i64_const, &(&1)},
+    {:f32_const, &(&1)},
+    {:f64_const, &(&1)}
   ]
 
   @binary [
-    {"i32.add",   fn x, y -> Instruction.add(x, y) end},
-    {"i32.sub", &(&1-&2)},
-    {"i32.mul", &(&1*&2)},
-    {"i32.div_s", &div(&1, &2)},
-    {"i32.div_u", &div(&1, &2)},
-    {"i32.and",   fn x, y -> x &&& y end},
-    {"i32.or",    fn x, y -> x ||| y end},
-    {"i32.rem_s", fn x, y -> rem(x, y) end},
-    {"i32.rem_u", fn x, y -> rem(x, y) end},
-    {"i32.eq",    fn x, y -> x == y end},
-    {"i32.ne",    fn x, y -> x != y end},
-    {"i32.lt_s",  fn x, y -> x < y end},
-    {"i32.le_s",  fn x, y -> x <= y end},
-    {"i32.gt_s",  fn x, y -> x > y end},
-    {"i32.ge_s",  fn x, y -> x >= y end},
-    {"i32.lt_u",  fn x, y -> x < y end},
-    {"i32.le_u",  fn x, y -> x <= y end},
-    {"i32.gt_u",  fn x, y -> x > y end},
-    {"i32.ge_u",  fn x, y -> x >= y end},
-    {"i32.rotr",  fn x, y -> Instruction.rotr(x, y) end},
-    {"i32.rotl",  fn x, y -> Instruction.rotl(x, y) end},
-    {"i32.shr_u", fn x, y -> x >>> y end},
-    # {"i32.shl",   fn x, y ->}
+    {:i32_add,   fn x, y -> Instruction.add(x, y) end},
+    {:i32_sub, &(&1-&2)},
+    {:i32_mul, &(&1*&2)},
+    {:i32_div_s, &div(&1, &2)},
+    {:i32_div_u, &div(&1, &2)},
+    {:i32_and,   fn x, y -> x &&& y end},
+    {:i32_or,    fn x, y -> x ||| y end},
+    {:i32_rem_s, fn x, y -> rem(x, y) end},
+    {:i32_rem_u, fn x, y -> rem(x, y) end},
+    {:i32_eq,    fn x, y -> x == y end},
+    {:i32_ne,    fn x, y -> x != y end},
+    {:i32_lt_s,  fn x, y -> x < y end},
+    {:i32_le_s,  fn x, y -> x <= y end},
+    {:i32_gt_s,  fn x, y -> x > y end},
+    {:i32_ge_s,  fn x, y -> x >= y end},
+    {:i32_lt_u,  fn x, y -> x < y end},
+    {:i32_le_u,  fn x, y -> x <= y end},
+    {:i32_gt_u,  fn x, y -> x > y end},
+    {:i32_ge_u,  fn x, y -> x >= y end},
+    {:i32_rotr,  fn x, y -> Instruction.rotr(x, y) end},
+    {:i32_rotl,  fn x, y -> Instruction.rotl(x, y) end},
+    {:i32_shr_u, fn x, y -> x >>> y end},
+    # {:i32_shl,   fn x, y ->}
   ]
 
   defstruct [
@@ -105,51 +105,51 @@ defmodule Machine do
     reduce instructions, s, fn [op|args], s ->
       IO.puts("#{op} #{inspect args} #{inspect s.items}")
       case op do
-        "const" ->
+        :const ->
           push(s, at(args, 0))
 
-        "add" ->
+        :add ->
           {right, s} = pop(s)
           {left, s} = pop(s)
           push(s, left+right)
 
-        "sub" ->
+        :sub ->
           {right, s} = pop(s)
           {left, s} = pop(s)
           push(s, left-right)
 
-        "mul" ->
+        :mul ->
           {right, s} = pop(s)
           {left, s} = pop(s)
           push(s, left*right)
 
-        "le" ->
+        :le ->
           {right, s} = pop(s)
           {left, s} = pop(s)
           push(s, left<=right)
 
-        "ge" ->
+        :ge ->
           {right, s} = pop(s)
           {left, s} = pop(s)
           push(s, left>=right)
 
-        "load" ->
+        :load ->
           {addr, s} = pop(s)
           push(s, load(s, addr))
-        "store" ->
+        :store ->
           {val, s} = pop(s)
           {addr, s} = pop(s)
           store(s, addr, val)
 
-        "local.get" ->
+        :local_get ->
           push(s, s.locals[at(args, 0)])
 
-        "local.set" ->
+        :local_set ->
           {val, s} = pop(s)
           locals = Map.put(s.locals, at(args, 0), val)
           %{s | locals: locals}
 
-        "call" ->
+        :call ->
           func = at(s.functions, at(args, 0))
           {fargs, s} = reduce(1..func.nparams, {[], s}, fn _, {fargs, s} ->
             {val, s} = pop(s)
@@ -162,10 +162,10 @@ defmodule Machine do
             s
           end
 
-        "br" ->
+        :br ->
           throw {Break, at(args, 0), s}
 
-        "br_if" ->
+        :br_if ->
           {val, s} = pop(s)
           if val do
             throw {Break, at(args, 0), s}
@@ -173,8 +173,8 @@ defmodule Machine do
             s
           end
 
-        # ("block", [ instructions ])
-        "block" ->
+        # (:block, [ instructions ])
+        :block ->
           try do
             execute(s, at(args, 0))
           catch
@@ -187,31 +187,31 @@ defmodule Machine do
           end
         # if (test) { consequence } else { alternative }
         #
-        # ["block", [
-        #   ["block", [
+        # [:block, [
+        #   [:block, [
         #     test,
-        #     ["br_if", 0], # Goto 0
+        #     [:br_if, 0], # Goto 0
         #     alternative,
-        #     ["br", 1],    # Goto 1
+        #     [:br, 1],    # Goto 1
         #   ]], # Label: 0
         #   consequence,
         # ] # Label 1
 
-        "loop" ->
+        :loop ->
           do_loop(s, args)
 
         # while (test) { body }
-        # ["block", [
-        #   ["loop", [
+        # [:block, [
+        #   ["loop, [
         #     # Label 0
         #     not test,
-        #     ["br_if", 1], #GOTO 1: bread
+        #     [:br_if, 1], #GOTO 1: bread
         #     body,
-        #     ["br", 0],
+        #     [:br, 0],
         #   ]]
         # ]]
 
-        "return" ->
+        :return ->
           throw { Return, s }
 
         op ->
@@ -250,11 +250,11 @@ defmodule Machine do
       nparams: 3,
       returns: true,
       code: [
-        ["local.get", 0], # x
-        ["local.get", 1], # v
-        ["local.get", 2], # dt
-        ["mul"],
-        ["add"]
+        [:local_get, 0], # x
+        [:local_get, 1], # v
+        [:local_get, 2], # dt
+        [:mul],
+        [:add]
       ]
     }
 
@@ -272,41 +272,41 @@ defmodule Machine do
     #   }
     # }
    code = [
-      ["block", [
-        ["loop", [
-            ["const", x_addr],
-            ["load"],
-            ["call", 1],
-            ["const", x_addr],
-            ["load"],
-            ["const", 0.0],
-            ["le"],
-            ["br_if", 1],
-            ["const", x_addr],
-            ["const", x_addr],
-            ["load"],
-            ["const", v_addr],
-            ["load"],
-            ["const", 0.1],
-            ["call", 0],
-            ["store"],
-            ["block", [
-            ["const", x_addr],
-            ["load"],
-            ["const", 70.0],
-            ["ge"],
-            ["block", [
-              ["br_if", 0],
-              ["br", 1]
+      [:block, [
+        [:loop, [
+            [:const, x_addr],
+            [:load],
+            [:call, 1],
+            [:const, x_addr],
+            [:load],
+            [:const, 0.0],
+            [:le],
+            [:br_if, 1],
+            [:const, x_addr],
+            [:const, x_addr],
+            [:load],
+            [:const, v_addr],
+            [:load],
+            [:const, 0.1],
+            [:call, 0],
+            [:store],
+            [:block, [
+            [:const, x_addr],
+            [:load],
+            [:const, 70.0],
+            [:ge],
+            [:block, [
+              [:br_if, 0],
+              [:br, 1]
             ]],
-            ["const", v_addr],
-            ["const", 0.0],
-            ["const", v_addr],
-            ["load"],
-            ["sub"],
-            ["store"]
+            [:const, v_addr],
+            [:const, 0.0],
+            [:const, v_addr],
+            [:load],
+            [:sub],
+            [:store]
           ]],
-          ["br", 0]
+          [:br, 0]
         ]]
       ]]
     ]
