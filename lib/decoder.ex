@@ -434,7 +434,6 @@ defmodule Decoder do
   defp typemap(0x70), do: :anyfunc
   defp typemap(0x60), do: :func
   defp typemap(0x40), do: nil
-  # defp typemap(x), do: x
 
   defp section(1), do: {:type, fn s -> parse_vector(s, &parse_functype/1) end}
   # defp section(2), do: {:import, &bslice/1}
