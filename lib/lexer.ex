@@ -2,12 +2,12 @@ defmodule Lexer do
   import NimbleParsec
   import LexerHelper
 
-  defp chars_to_integer(_, args, context, _, _) do
+  defp chars_to_integer(_, args, context, _, _, base \\ 10) do
     {
       args
       |> Enum.reverse()
       |> to_string()
-      |> String.to_integer()
+      |> String.to_integer(base)
       |> List.wrap(),
       context
     }
@@ -22,13 +22,17 @@ defmodule Lexer do
         optional(ignore(ascii_char([?_]))),
         digit
       )
-    ) |> post_traverse({:chars_to_integer, []})
+    ) |> post_traverse(
+      {:chars_to_integer, []}
+    )
   hexnum = hexdigit
     |> possible(
       concat(
-        optional(ascii_char([?_])),
+        optional(ignore(ascii_char([?_]))),
         hexdigit
       )
+    ) |> post_traverse(
+      {:chars_to_integer, [16]}
     )
 
   letter = ascii_char [?a..?z, ?A..?Z]
